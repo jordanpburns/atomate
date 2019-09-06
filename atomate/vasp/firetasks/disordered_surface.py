@@ -22,7 +22,7 @@ class CreateSlab(FiretaskBase):
     """
 
     #required_params = ["vacuum", "num_layers", "surf_layers_to_relax", "atomic_thickness"]
-    required_params = ["name"]
+    required_params = []
     optional_params = []
 
     def run_task(self, fw_spec):
