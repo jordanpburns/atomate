@@ -60,6 +60,11 @@ class CreateSlab(FiretaskBase):
         slab_optimize = add_modify_incar(slab_optimize, modify_incar_params = optimize_update, fw_name_constraint='optimization')
 
         slab_static = StaticFW(struct, name = name + '_slab_static_' + time, parents = [slab_optimize], prev_calc_loc=True, vasp_cmd=">>vasp_cmd<<", db_file=">>db_file<<")
+        #slab_static.tasks.append(Slab_energy_and_SA())        
+                     
+        #surface_energy_calc_fw = Firework(Surface_energy_calc(), parents = [bulk_static, slab_static])
+                     
+        #return FWAction(additions = [slab_optimize, slab_static, surface_energy_calc_fw])
         return FWAction(additions = [slab_optimize, slab_static])
 
     def add_vacuum(struct, c_to_add):
@@ -70,3 +75,52 @@ class CreateSlab(FiretaskBase):
         new_lattice = struct.lattice.matrix.copy()
         new_lattice[2, 2] += c_to_add
         return Structure(Lattice(new_lattice), struct.species, struct.cart_coords, coords_are_cartesian=True, to_unit_cell=True, site_properties=struct.site_properties)
+
+"""@explicit_serialize
+class Surface_energy_calc(FiretaskBase):
+    #This firetask gets the energies from the static calculations of the bulk and slab calculations as well as the surface area and then calculates the surface energy
+    
+    #required_params = ["bulk_energy", "slab_energy", "surface_area", "num_layers"]
+    required_params = []
+    optional_params = []
+    
+    def run_task(self, fw_spec):
+        bulk_E = self.get("bulk_energy")
+        slab_E = self.get("slab_energy")
+        surface_area = self.get("surface_area")
+        n = self.get("num_layers") 
+        surface_energy = (slab_E - n * bulk_E) / (2 * surface_area)
+        return FWAction(mod_spec=[{'_push': {'surface_energy': surface_energy}}])"""
+            
+"""@explicit_serialize
+class Bulk_energy(FiretaskBase):
+    #This firetask gets the energy of the bulk static calculation and adds it to the child firework spec
+            
+    required_params = []
+    optional_params = []
+    
+    def run_task(self, fw_spec):
+            
+        OUTCAR = Outcar("OUTCAR")
+        energy = OUTCAR.final_energy
+        return FWAction(mod_spec=[{'_push': {'bulk_energy': energy}}])"""
+
+"""@explicit_serialize
+class Slab_energy_and_SA(FiretaskBase):
+    #This firetask gets the energy of the slab static calculation as well as the surface area and adds it to the child firework spec
+            
+    required_params = []
+    optional_params = []
+    
+    def run_task(self, fw_spec):
+            
+        OUTCAR = Outcar("OUTCAR")
+        energy = OUTCAR.final_energy
+        
+        POSCAR = Poscar.from_file("CONTCAR")
+        a = POSCAR.structure.lattice.a
+        b = POSCAR.structure.lattice.b
+        surface_area = a * b
+        
+        
+        return FWAction(mod_spec=[{'_push': {'slab_energy': energy, 'surface_area':surface_area}}])"""
